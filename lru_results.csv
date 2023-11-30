@@ -1,3 +1,9 @@
 Operation,Cache Size,Result
-Operation 4,3,2
-Operation 6,3,-1
+Operation 1,0,-1
+Operation 2,1,N/A
+Operation 3,1,-1
+Operation 4,1,-1
+Operation 5,2,N/A
+Operation 7,2,-1
+Operation 8,3,N/A
+Operation 9,3,-1

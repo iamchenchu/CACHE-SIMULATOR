@@ -1,7 +1,7 @@
 import csv
 from collections import OrderedDict
 from heapq import heappush, heappop
-
+import random
 
 class LRUCache:
     def __init__(self, capacity):
@@ -73,36 +73,69 @@ class FIFOCache:
         self.cache[key] = value
 
 
-def run_cache_simulation(cache, operations, filename):
+def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
+    if cache_type == 'LRU':
+        cache = LRUCache(cache_capacity)
+    elif cache_type == 'LFU':
+        cache = LFUCache(cache_capacity)
+    elif cache_type == 'FIFO':
+        cache = FIFOCache(cache_capacity)
+    else:
+        raise ValueError("Invalid cache type. Choose from 'LRU', 'LFU', or 'FIFO'.")
+
     results = []
-    with open(filename, 'w', newline='') as csvfile:
+
+    with open(output_filename, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['Operation', 'Cache Size', 'Result'])
-        for i, op in enumerate(operations):
-            if op[0] == 'put':
-                cache.put(op[1], op[2])
-            elif op[0] == 'get':
-                result = cache.get(op[1])
+
+        for i, operation in enumerate(cpu_operations):
+            op_type, *op_args = operation
+
+            if op_type == 'get':
+                key = op_args[0]
+                result = cache.get(key)
                 results.append(result)
                 cache_size = len(cache.cache)
                 print(f"Operation {i + 1}: Cache Size: {cache_size}, Result: {result}")
                 csvwriter.writerow([f'Operation {i + 1}', cache_size, result])
+
+            elif op_type == 'put':
+                key, value = op_args
+                cache.put(key, value)
+                cache_size = len(cache.cache)
+                print(f"Operation {i + 1}: Cache Size: {cache_size}, Cache Updated: {cache.cache}")
+                csvwriter.writerow([f'Operation {i + 1}', cache_size, 'N/A'])
+
+            elif op_type == 'compute':
+                # Simulate a CPU compute operation (no effect on cache in this example)
+                print(f"Operation {i + 1}: Compute Task Executed")
+
+            else:
+                print(f"Operation {i + 1}: Unknown Operation")
+
     return results
 
 
 # Example usage:
 
-# LRU Cache
-lru_cache = LRUCache(3)
-lru_operations = [('put', 1, 1), ('put', 2, 2), ('put', 3, 3), ('get', 2), ('put', 4, 4), ('get', 1)]
-lru_results = run_cache_simulation(lru_cache, lru_operations, 'lru_results.csv')
+# Define CPU operations with cache hits, misses, and cache updates
+cpu_operations = [
+    ('get', 2),
+    ('put', 4, 40),
+    ('get', 1),
+    ('get', 2),
+    ('put', 5, 50),
+    ('compute'),
+    ('get', 3),
+    ('put', 6, 60),
+    ('get', 2),
+]
 
-# LFU Cache
-lfu_cache = LFUCache(2)
-lfu_operations = [('put', 1, 1), ('put', 2, 2), ('get', 1), ('put', 3, 3), ('get', 2)]
-lfu_results = run_cache_simulation(lfu_cache, lfu_operations, 'lfu_results.csv')
+# Set cache type, capacity, and output filename
+cache_type = 'LRU'
+cache_capacity = 3
+output_filename = f'{cache_type}_results.csv'
 
-# FIFO Cache
-fifo_cache = FIFOCache(2)
-fifo_operations = [('put', 1, 1), ('put', 2, 2), ('get', 1), ('put', 3, 3), ('get', 2)]
-fifo_results = run_cache_simulation(fifo_cache, fifo_operations, 'fifo_results.csv')
+# Simulate CPU and cache interactions
+simulate(cpu_operations, cache_type, cache_capacity, output_filename)
