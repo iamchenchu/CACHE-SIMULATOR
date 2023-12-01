@@ -2,6 +2,7 @@ import csv
 import concurrent.futures
 from collections import OrderedDict
 import numpy as np  # Added import for NaN handling
+import time  # Added import for measuring execution time
 
 class LRUCache:
     def __init__(self, capacity):
@@ -113,16 +114,6 @@ def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
 
     return results
 
-def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
-    for cache_type, output_filename in zip(cache_types, output_filenames):
-        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
-
-def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
-    with concurrent.futures.ThreadPoolExecutor() as executor:  # Change to ProcessPoolExecutor for parallel processes
-        futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
-                   for cache_type, output_filename in zip(cache_types, output_filenames)]
-        concurrent.futures.wait(futures)
-
 def simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename):
     cache_hits = 0
     cache_misses = 0
@@ -171,50 +162,87 @@ def simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_fil
 
     total_operations = len(cpu_operations)
     miss_rate = cache_misses / total_operations if total_operations > 0 else 0.0
+    hit_rate = cache_hits / total_operations if total_operations > 0 else 0.0
 
     print("\nCache Simulation Metrics:")
     print(f"Total Hits: {cache_hits}")
     print(f"Total Misses: {cache_misses}")
     print(f"Miss Rate: {miss_rate * 100:.2f}%")
+    print(f"Hit Rate: {hit_rate * 100:.2f}%")
 
     return cache_hits, cache_misses, miss_rate
+
+def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
+    for cache_type, output_filename in zip(cache_types, output_filenames):
+        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
+
+def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
+    with concurrent.futures.ProcessPoolExecutor() as executor:  # Use ProcessPoolExecutor for true parallelism
+        futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
+                   for cache_type, output_filename in zip(cache_types, output_filenames)]
+        concurrent.futures.wait(futures)
 
 def simulate_sequential_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames):
     total_hits = 0
     total_misses = 0
 
+    start_time = time.time()
+
     for cache_type, output_filename in zip(cache_types, output_filenames):
-        cache_hits, cache_misses, _ = simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename)
+        print(f"\nSequential Simulation - Cache Type: {cache_type}\n")
+        cache_hits, cache_misses, miss_rate = simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename)
+        print(f"Miss Rate: {miss_rate * 100:.2f}%")
+
+        # Aggregate metrics for total hits and misses
         total_hits += cache_hits
         total_misses += cache_misses
+
+    end_time = time.time()
+    total_execution_time = end_time - start_time
 
     print("\nTotal Metrics (Sequential):")
     print(f"Total Hits: {total_hits}")
     print(f"Total Misses: {total_misses}")
     total_operations = len(cpu_operations) * len(cache_types)
     miss_rate = total_misses / total_operations if total_operations > 0 else 0.0
+    hit_rate = total_hits / total_operations if total_operations > 0 else 0.0
     print(f"Miss Rate: {miss_rate * 100:.2f}%")
+    print(f"Hit Rate: {hit_rate * 100:.2f}%")
+    print(f"Total Execution Time: {total_execution_time:.2f} seconds")
+
 
 def simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames):
     total_hits = 0
     total_misses = 0
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:  # Change to ProcessPoolExecutor for parallel processes
+    start_time = time.time()
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:  # Use ProcessPoolExecutor for true parallelism
         futures = [executor.submit(simulate_with_metrics, cpu_operations, cache_type, cache_capacity, output_filename)
                    for cache_type, output_filename in zip(cache_types, output_filenames)]
         concurrent.futures.wait(futures)
 
-        for future in futures:
-            cache_hits, cache_misses, _ = future.result()
+        for cache_type, future in zip(cache_types, futures):
+            print(f"\nParallel Simulation - Cache Type: {cache_type}\n")
+            cache_hits, cache_misses, miss_rate = future.result()
             total_hits += cache_hits
             total_misses += cache_misses
+            print(f"Miss Rate: {miss_rate * 100:.2f}%")
 
-    print("\nTotal Metrics (Parallel):")
+    end_time = time.time()
+    total_execution_time = end_time - start_time
+
+    print("\nTotal Metrics (True Parallel):")
     print(f"Total Hits: {total_hits}")
     print(f"Total Misses: {total_misses}")
     total_operations = len(cpu_operations) * len(cache_types)
     miss_rate = total_misses / total_operations if total_operations > 0 else 0.0
+    hit_rate = total_hits / total_operations if total_operations > 0 else 0.0
     print(f"Miss Rate: {miss_rate * 100:.2f}%")
+    print(f"Hit Rate: {hit_rate * 100:.2f}%")
+    print(f"Total Execution Time: {total_execution_time:.2f} seconds")
+
+# ... (unchanged)
 
 def main():
     # Read CPU operations from a text file

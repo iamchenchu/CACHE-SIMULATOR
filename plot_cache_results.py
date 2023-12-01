@@ -2,9 +2,7 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np  # Added import for NaN handling
 
-def plot_cache_results(csv_filenames, labels):
-    plt.figure(figsize=(15, 8))
-
+def plot_cache_results(csv_filenames, labels, title):
     for i, csv_filename in enumerate(csv_filenames):
         with open(csv_filename, 'r') as csvfile:
             reader = csv.reader(csvfile)
@@ -21,32 +19,40 @@ def plot_cache_results(csv_filenames, labels):
                 results.append(result_value)
 
             # Plot Cache Sizes
-            plt.subplot(2, 3, i + 1)
+            plt.figure(figsize=(12, 6))
             plt.plot(operations, cache_sizes, marker='o', linestyle='-', label=labels[i])
-            plt.title(f'Cache Sizes Over Operations ({labels[i]})')
-            plt.xlabel('Operation')
-            plt.ylabel('Cache Size')
-            plt.legend()
+            plt.title(f'Cache Sizes Over Operations ({title})', fontsize=16)
+            plt.xlabel('Operation', fontsize=14)
+            plt.ylabel('Cache Size', fontsize=14)
+            plt.legend(fontsize=12)
             plt.grid(True)
+            plt.tight_layout()
+            plt.show()
 
             # Plot Results
-            plt.subplot(2, 3, i + 4)
+            plt.figure(figsize=(12, 6))
             results = [np.nan if result is None else result for result in results]
             plt.plot(operations, results, marker='o', linestyle='-', label=labels[i])
-            plt.title(f'Results Over Operations ({labels[i]})')
-            plt.xlabel('Operation')
-            plt.ylabel('Result')
-            plt.legend()
+            plt.title(f'Results Over Operations ({title})', fontsize=16)
+            plt.xlabel('Operation', fontsize=14)
+            plt.ylabel('Result', fontsize=14)
+            plt.legend(fontsize=12)
             plt.grid(True)
-
-    plt.tight_layout()
-    plt.show()
+            plt.tight_layout()
+            plt.show()
 
 # Example usage:
-csv_filenames = ['LRU_parallel_results.csv', 'LFU_parallel_results.csv', 'FIFO_parallel_results.csv']
-labels = ['P_LRU', 'P_LFU', 'P_FIFO']
-plot_cache_results(csv_filenames, labels)
+# For FIFO
+fifo_csv_filenames = ['FIFO_parallel_results.csv', 'FIFO_sequential_results.csv']
+fifo_labels = ['P_FIFO', 'S_FIFO']
+plot_cache_results(fifo_csv_filenames, fifo_labels, 'FIFO')
 
-csv_filenames = ['LRU_sequential_results.csv', 'LFU_sequential_results.csv', 'FIFO_sequential_results.csv']
-labels = ['S_LRU', 'S_LFU', 'S_FIFO']
-plot_cache_results(csv_filenames, labels)
+# For LRU
+lru_csv_filenames = ['LRU_parallel_results.csv', 'LRU_sequential_results.csv']
+lru_labels = ['P_LRU', 'S_LRU']
+plot_cache_results(lru_csv_filenames, lru_labels, 'LRU')
+
+# For LFU
+lfu_csv_filenames = ['LFU_parallel_results.csv', 'LFU_sequential_results.csv']
+lfu_labels = ['P_LFU', 'S_LFU']
+plot_cache_results(lfu_csv_filenames, lfu_labels, 'LFU')

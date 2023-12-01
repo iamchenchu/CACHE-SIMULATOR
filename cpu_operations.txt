@@ -1,0 +1,150 @@
+get 2
+put 4 40
+get 4
+get 2
+put 5 50
+get 3
+put 6 60
+get 5
+put 7 70 
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
+get 2
+put 10 100
+get 3
+get 7
+put 11 110
+put 12 120
+get 8
+get 9
+put 13 130
+get 4
+put 14 140
+get 10
+get 2
+put 4 40
+get 1
+get 2
+put 5 50
+get 3
+put 6 60
+get 2
+put 7 70
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
+get 2
+put 10 100
+get 3
+get 7
+put 11 110
+put 12 120
+get 8
+get 9
+put 13 130
+get 4
+put 14 140
+get 10
+get 2
+put 4 40
+get 1
+get 2
+put 5 50
+get 3
+put 6 60
+get 2
+put 7 70
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
+get 2
+put 10 100
+get 3
+get 7
+put 11 110
+put 12 120
+get 8
+get 9
+put 13 130
+get 4
+put 14 140
+get 10
+get 2
+put 4 40
+get 1
+get 2
+put 5 50
+get 3
+put 6 60
+get 2
+put 7 70
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
+get 2
+put 10 100
+get 3
+get 7
+put 11 110
+put 12 120
+get 8
+get 9
+put 13 130
+get 4
+put 14 140
+get 10
+get 2
+put 4 40
+get 1
+get 2
+put 5 50
+get 3
+put 6 60
+get 2
+put 7 70
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
+get 2
+put 10 100
+get 3
+get 7
+put 11 110
+put 12 120
+get 8
+get 9
+put 13 130
+get 4
+put 14 140
+get 10
+get 2
+put 4 40
+get 1
+get 2
+put 5 50
+get 3
+put 6 60
+get 2
+put 7 70
+get 4
+get 5
+put 8 80
+get 1
+put 9 90
+get 6
