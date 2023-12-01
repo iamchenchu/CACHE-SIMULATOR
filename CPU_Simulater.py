@@ -1,7 +1,6 @@
 import csv
+import concurrent.futures
 from collections import OrderedDict
-from heapq import heappush, heappop
-import random
 
 class LRUCache:
     def __init__(self, capacity):
@@ -117,10 +116,21 @@ def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
     return results
 
 
-# Example usage:
+def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
+    for cache_type, output_filename in zip(cache_types, output_filenames):
+        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
 
-# Define CPU operations with cache hits, misses, and cache updates
-cpu_operations = [
+def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
+    with concurrent.futures.ThreadPoolExecutor() as executor:  # Change to ProcessPoolExecutor for parallel processes
+        futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
+                   for cache_type, output_filename in zip(cache_types, output_filenames)]
+        concurrent.futures.wait(futures)
+
+def main():
+    # Example usage:
+
+    # Define CPU operations with cache hits, misses, and cache updates
+    cpu_operations = [
     ('get', 2),
     ('put', 4, 40),
     ('get', 1),
@@ -130,12 +140,42 @@ cpu_operations = [
     ('get', 3),
     ('put', 6, 60),
     ('get', 2),
+    ('put', 7, 70),
+    ('get', 4),
+    ('get', 5),
+    ('put', 8, 80),
+    ('compute'),
+    ('get', 1),
+    ('put', 9, 90),
+    ('get', 6),
+    ('get', 2),
+    ('put', 10, 100),
+    ('get', 3),
+    ('compute'),
+    ('get', 7),
+    ('put', 11, 110),
+    ('put', 12, 120),
+    ('get', 8),
+    ('get', 9),
+    ('put', 13, 130),
+    ('compute'),
+    ('get', 4),
+    ('put', 14, 140),
+    ('get', 10),
 ]
 
-# Set cache type, capacity, and output filename
-cache_type = 'LRU'
-cache_capacity = 3
-output_filename = f'{cache_type}_results.csv'
+    # Set cache types, capacity, and output filenames
+    cache_types = ['LRU', 'LFU', 'FIFO']
+    cache_capacity = 3
 
-# Simulate CPU and cache interactions
-simulate(cpu_operations, cache_type, cache_capacity, output_filename)
+    # Sequential execution
+    for cache_type in cache_types:
+        output_filename = f'{cache_type}_sequential_results.csv'
+        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
+
+    # Parallel execution
+    output_filenames_parallel = [f'{cache_type}_parallel_results.csv' for cache_type in cache_types]
+    simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames_parallel)
+
+if __name__ == "__main__":
+    main()
