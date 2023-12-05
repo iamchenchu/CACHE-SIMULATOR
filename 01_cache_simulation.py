@@ -239,7 +239,7 @@ def simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, 
 
 def main():
     # Read CPU operations from a text file
-    with open("cpu_operations.txt", "r") as file:
+    with open("00_cpu_operations.txt", "r") as file:
         cpu_operations = [tuple(line.strip().split()) for line in file]
 
     # Set cache types and output filenames
