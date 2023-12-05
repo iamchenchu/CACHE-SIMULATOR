@@ -1,87 +1,131 @@
 import csv
 import concurrent.futures
 from collections import OrderedDict
-import numpy as np  # Added import for NaN handling
-import time  # Added import for measuring execution time
+import time
 
-class LRUCache:
-    def __init__(self, capacity):
+class AdaptiveFIFOCache:
+    def __init__(self, capacity, decay_factor=0.5):
         self.capacity = capacity
         self.cache = OrderedDict()
-
-    def get(self, key):
-        if key in self.cache:
-            # Move the accessed key to the end
-            self.cache.move_to_end(key)
-            return self.cache[key]
-        return -1
-
-    def put(self, key, value):
-        if key in self.cache:
-            # Move the existing key to the end
-            self.cache.move_to_end(key)
-        elif len(self.cache) >= self.capacity:
-            # Remove the first (least recently used) item
-            self.cache.popitem(last=False)
-        self.cache[key] = value
-
-class LFUCache:
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.cache = {}
         self.frequency = {}
+        self.decay_factor = decay_factor
 
     def get(self, key):
-        if key in self.cache:
-            # Increment frequency and move to the correct heap
-            self.frequency[key] += 1
-            return self.cache[key]
-        return -1
+        return self.cache.get(key, -1)
 
     def put(self, key, value):
         if self.capacity > 0:
             if key in self.cache:
-                # Update value and increment frequency
+                # Update value and decay frequencies
                 self.cache[key] = value
-                self.frequency[key] += 1
+                self.decay_frequencies(key)
             else:
                 # Check and remove the least frequently used item if at capacity
                 if len(self.cache) >= self.capacity:
                     min_key = min(self.frequency, key=lambda k: (self.frequency[k], k))
                     del self.cache[min_key]
                     del self.frequency[min_key]
-                # Add new item
+                # Add new item and set initial frequency to 1
                 self.cache[key] = value
                 self.frequency[key] = 1
 
-class FIFOCache:
-    def __init__(self, capacity):
+    def decay_frequencies(self, current_key):
+        # Decay frequencies of all items except the current key
+        for key in self.frequency:
+            if key != current_key:
+                self.frequency[key] *= self.decay_factor
+
+class AdaptiveLRUCache:
+    def __init__(self, capacity, decay_factor=0.5):
         self.capacity = capacity
         self.cache = OrderedDict()
+        self.frequency = {}
+        self.decay_factor = decay_factor
 
     def get(self, key):
-        return self.cache.get(key, -1)
+        if key in self.cache:
+            # Increment frequency and move the accessed key to the end
+            self.frequency[key] += 1
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        return -1
 
     def put(self, key, value):
+        if self.capacity > 0:
+            if key in self.cache:
+                # Update value, increment frequency, and decay frequencies
+                self.cache[key] = value
+                self.frequency[key] += 1
+                self.cache.move_to_end(key)
+                self.decay_frequencies(key)
+            else:
+                # Check and remove the least frequently used item if at capacity
+                if len(self.cache) >= self.capacity:
+                    min_key = min(self.frequency, key=lambda k: (self.frequency[k], k))
+                    del self.cache[min_key]
+                    del self.frequency[min_key]
+                # Add new item and set initial frequency to 1
+                self.cache[key] = value
+                self.frequency[key] = 1
+
+    def decay_frequencies(self, current_key):
+        # Decay frequencies of all items except the current key
+        for key in self.frequency:
+            if key != current_key:
+                self.frequency[key] *= self.decay_factor
+
+class AdaptiveLFUCache:
+    def __init__(self, capacity, decay_factor=0.5):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+        self.frequency = {}
+        self.decay_factor = decay_factor
+
+    def get(self, key):
         if key in self.cache:
-            # Update value
-            self.cache[key] = value
-        elif len(self.cache) >= self.capacity:
-            # Remove the first (oldest) item
-            self.cache.popitem(last=False)
-        self.cache[key] = value
+            # Increment frequency and move the accessed key to the end
+            self.frequency[key] += 1
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        return -1
+
+    def put(self, key, value):
+        if self.capacity > 0:
+            if key in self.cache:
+                # Update value, increment frequency, and decay frequencies
+                self.cache[key] = value
+                self.frequency[key] += 1
+                self.cache.move_to_end(key)
+                self.decay_frequencies(key)
+            else:
+                # Check and remove the least frequently used item if at capacity
+                if len(self.cache) >= self.capacity:
+                    min_key = min(self.frequency, key=lambda k: (self.frequency[k], k))
+                    del self.cache[min_key]
+                    del self.frequency[min_key]
+                # Add new item and set initial frequency to 1
+                self.cache[key] = value
+                self.frequency[key] = 1
+
+    def decay_frequencies(self, current_key):
+        # Decay frequencies of all items except the current key
+        for key in self.frequency:
+            if key != current_key:
+                self.frequency[key] *= self.decay_factor
 
 def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
-    if cache_type == 'LRU':
-        cache = LRUCache(cache_capacity)
-    elif cache_type == 'LFU':
-        cache = LFUCache(cache_capacity)
-    elif cache_type == 'FIFO':
-        cache = FIFOCache(cache_capacity)
+    if cache_type == 'AdaptiveFIFO':
+        cache = AdaptiveFIFOCache(cache_capacity, decay_factor=0.5)
+    elif cache_type == 'AdaptiveLRU':
+        cache = AdaptiveLRUCache(cache_capacity, decay_factor=0.5)
+    elif cache_type == 'AdaptiveLFU':
+        cache = AdaptiveLFUCache(cache_capacity, decay_factor=0.5)
     else:
-        raise ValueError("Invalid cache type. Choose from 'LRU', 'LFU', or 'FIFO'.")
+        raise ValueError("Invalid cache type. Choose from 'AdaptiveFIFO', 'AdaptiveLRU', or 'AdaptiveLFU'.")
 
     results = []
+
+    start_time = time.time()
 
     with open(output_filename, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -112,6 +156,12 @@ def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
             else:
                 print(f"Operation {i + 1}: Unknown Operation")
 
+    end_time = time.time()
+    total_execution_time = end_time - start_time
+
+    print("\nCache Simulation Metrics:")
+    print(f"Total Execution Time: {total_execution_time:.2f} seconds")
+
     return results
 
 def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
@@ -119,7 +169,7 @@ def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_file
         simulate(cpu_operations, cache_type, cache_capacity, output_filename)
 
 def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
-    with concurrent.futures.ThreadPoolExecutor() as executor:  # Change to ProcessPoolExecutor for parallel processes
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
                    for cache_type, output_filename in zip(cache_types, output_filenames)]
         concurrent.futures.wait(futures)
@@ -128,14 +178,14 @@ def simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_fil
     cache_hits = 0
     cache_misses = 0
 
-    if cache_type == 'LRU':
-        cache = LRUCache(cache_capacity)
-    elif cache_type == 'LFU':
-        cache = LFUCache(cache_capacity)
-    elif cache_type == 'FIFO':
-        cache = FIFOCache(cache_capacity)
+    if cache_type == 'AdaptiveFIFO':
+        cache = AdaptiveFIFOCache(cache_capacity, decay_factor=0.5)
+    elif cache_type == 'AdaptiveLRU':
+        cache = AdaptiveLRUCache(cache_capacity, decay_factor=0.5)
+    elif cache_type == 'AdaptiveLFU':
+        cache = AdaptiveLFUCache(cache_capacity, decay_factor=0.5)
     else:
-        raise ValueError("Invalid cache type. Choose from 'LRU', 'LFU', or 'FIFO'.")
+        raise ValueError("Invalid cache type. Choose from 'AdaptiveFIFO', 'AdaptiveLRU', or 'AdaptiveLFU'.")
 
     with open(output_filename, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -235,24 +285,16 @@ def simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, 
     print(f"Hit Rate: {hit_rate * 100:.2f}%")
     print(f"Total Execution Time: {total_execution_time:.2f} seconds")
 
-# ... (existing code)
-
 def main():
-    # Read CPU operations from a text file
     with open("cpu_operations.txt", "r") as file:
         cpu_operations = [tuple(line.strip().split()) for line in file]
 
-    # Set cache types and output filenames
-    cache_types = ['LRU', 'LFU', 'FIFO']
-
-    # Prompt user for cache size
+    cache_types = ['AdaptiveFIFO', 'AdaptiveLRU', 'AdaptiveLFU']
     cache_capacity = int(input("Enter cache size: "))
 
-    # Sequential execution with metrics
     output_filenames_sequential = [f'{cache_type}_sequential_results.csv' for cache_type in cache_types]
     simulate_sequential_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames_sequential)
 
-    # Parallel execution with metrics
     output_filenames_parallel = [f'{cache_type}_parallel_results.csv' for cache_type in cache_types]
     simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames_parallel)
 

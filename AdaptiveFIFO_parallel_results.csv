@@ -52,7 +52,7 @@ Operation 50,10,90
 Operation 51,10,N/A
 Operation 52,10,40
 Operation 53,10,N/A
-Operation 54,10,-1
+Operation 54,10,100
 Operation 55,10,-1
 Operation 56,10,N/A
 Operation 57,10,-1
@@ -106,7 +106,7 @@ Operation 104,10,90
 Operation 105,10,N/A
 Operation 106,10,40
 Operation 107,10,N/A
-Operation 108,10,-1
+Operation 108,10,100
 Operation 109,10,-1
 Operation 110,10,N/A
 Operation 111,10,-1

@@ -43,16 +43,16 @@ def plot_cache_results(csv_filenames, labels, title):
 
 # Example usage:
 # For FIFO
-fifo_csv_filenames = ['FIFO_parallel_results.csv', 'FIFO_sequential_results.csv']
+fifo_csv_filenames = ['AdaptiveFIFO_parallel_results.csv', 'AdaptiveFIFO_sequential_results.csv']
 fifo_labels = ['P_FIFO', 'S_FIFO']
 plot_cache_results(fifo_csv_filenames, fifo_labels, 'FIFO')
 
 # For LRU
-lru_csv_filenames = ['LRU_parallel_results.csv', 'LRU_sequential_results.csv']
+lru_csv_filenames = ['AdaptiveLRU_parallel_results.csv', 'AdaptiveLRU_sequential_results.csv']
 lru_labels = ['P_LRU', 'S_LRU']
 plot_cache_results(lru_csv_filenames, lru_labels, 'LRU')
 
 # For LFU
-lfu_csv_filenames = ['LFU_parallel_results.csv', 'LFU_sequential_results.csv']
+lfu_csv_filenames = ['AdaptiveLFU_parallel_results.csv', 'AdaptiveLFU_sequential_results.csv']
 lfu_labels = ['P_LFU', 'S_LFU']
 plot_cache_results(lfu_csv_filenames, lfu_labels, 'LFU')

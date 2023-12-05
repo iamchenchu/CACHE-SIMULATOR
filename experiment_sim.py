@@ -114,6 +114,16 @@ def simulate(cpu_operations, cache_type, cache_capacity, output_filename):
 
     return results
 
+def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
+    for cache_type, output_filename in zip(cache_types, output_filenames):
+        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
+
+def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
+    with concurrent.futures.ThreadPoolExecutor() as executor:  # Change to ProcessPoolExecutor for parallel processes
+        futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
+                   for cache_type, output_filename in zip(cache_types, output_filenames)]
+        concurrent.futures.wait(futures)
+
 def simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename):
     cache_hits = 0
     cache_misses = 0
@@ -172,16 +182,6 @@ def simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_fil
 
     return cache_hits, cache_misses, miss_rate
 
-def simulate_sequential(cpu_operations, cache_types, cache_capacity, output_filenames):
-    for cache_type, output_filename in zip(cache_types, output_filenames):
-        simulate(cpu_operations, cache_type, cache_capacity, output_filename)
-
-def simulate_parallel(cpu_operations, cache_types, cache_capacity, output_filenames):
-    with concurrent.futures.ProcessPoolExecutor() as executor:  # Use ProcessPoolExecutor for true parallelism
-        futures = [executor.submit(simulate, cpu_operations, cache_type, cache_capacity, output_filename)
-                   for cache_type, output_filename in zip(cache_types, output_filenames)]
-        concurrent.futures.wait(futures)
-
 def simulate_sequential_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames):
     total_hits = 0
     total_misses = 0
@@ -189,11 +189,7 @@ def simulate_sequential_with_metrics(cpu_operations, cache_types, cache_capacity
     start_time = time.time()
 
     for cache_type, output_filename in zip(cache_types, output_filenames):
-        print(f"\nSequential Simulation - Cache Type: {cache_type}\n")
-        cache_hits, cache_misses, miss_rate = simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename)
-        print(f"Miss Rate: {miss_rate * 100:.2f}%")
-
-        # Aggregate metrics for total hits and misses
+        cache_hits, cache_misses, _ = simulate_with_metrics(cpu_operations, cache_type, cache_capacity, output_filename)
         total_hits += cache_hits
         total_misses += cache_misses
 
@@ -210,29 +206,26 @@ def simulate_sequential_with_metrics(cpu_operations, cache_types, cache_capacity
     print(f"Hit Rate: {hit_rate * 100:.2f}%")
     print(f"Total Execution Time: {total_execution_time:.2f} seconds")
 
-
 def simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, output_filenames):
     total_hits = 0
     total_misses = 0
 
     start_time = time.time()
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:  # Use ProcessPoolExecutor for true parallelism
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(simulate_with_metrics, cpu_operations, cache_type, cache_capacity, output_filename)
                    for cache_type, output_filename in zip(cache_types, output_filenames)]
         concurrent.futures.wait(futures)
 
-        for cache_type, future in zip(cache_types, futures):
-            print(f"\nParallel Simulation - Cache Type: {cache_type}\n")
-            cache_hits, cache_misses, miss_rate = future.result()
+        for future in futures:
+            cache_hits, cache_misses, _ = future.result()
             total_hits += cache_hits
             total_misses += cache_misses
-            print(f"Miss Rate: {miss_rate * 100:.2f}%")
 
     end_time = time.time()
     total_execution_time = end_time - start_time
 
-    print("\nTotal Metrics (True Parallel):")
+    print("\nTotal Metrics (Parallel):")
     print(f"Total Hits: {total_hits}")
     print(f"Total Misses: {total_misses}")
     total_operations = len(cpu_operations) * len(cache_types)
@@ -242,7 +235,7 @@ def simulate_parallel_with_metrics(cpu_operations, cache_types, cache_capacity, 
     print(f"Hit Rate: {hit_rate * 100:.2f}%")
     print(f"Total Execution Time: {total_execution_time:.2f} seconds")
 
-# ... (unchanged)
+# ... (existing code)
 
 def main():
     # Read CPU operations from a text file
